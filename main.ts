@@ -23,6 +23,29 @@ import { join } from 'node:path';
 const REVIEW =
   "Asked for 'one quick fix' at 2 a.m. It is now sunrise and he is still watching me work. Five stars — would be supervised again.";
 
+// Competition limits (from the competition spec): the entry must be a
+// single line of 1–200 characters, not whitespace-only. Enforce them here
+// so a bad edit to REVIEW fails loudly instead of shipping an entry the
+// judge would reject.
+const MAX_REVIEW_CHARS = 200;
+
+function validateReview(review: string): void {
+  const length = [...review].length; // code points, not UTF-16 units
+  if (review.trim().length === 0) {
+    throw new Error('Review must not be empty or whitespace-only.');
+  }
+  if (review.includes('\n') || review.includes('\r')) {
+    throw new Error('Review must be a single line (no line breaks).');
+  }
+  if (length > MAX_REVIEW_CHARS) {
+    throw new Error(
+      `Review is ${length} characters, over the ${MAX_REVIEW_CHARS}-character limit.`,
+    );
+  }
+}
+
+validateReview(REVIEW);
+
 const outputDir = process.env.MAKEFUN_OUTPUT_DIR ?? '/output';
 
 writeFileSync(join(outputDir, 'entry.txt'), REVIEW, 'utf8');
